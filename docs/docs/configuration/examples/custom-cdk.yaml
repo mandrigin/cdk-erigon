@@ -1,0 +1,132 @@
+# =============================================================================
+# Custom CDK Chain Configuration Template
+# =============================================================================
+# Use this template when deploying your own CDK chain. Replace all placeholder
+# values (marked with <PLACEHOLDER>) with your actual deployment values.
+#
+# Prerequisites:
+# - Deploy CDK contracts to L1 (record all contract addresses)
+# - Set up sequencer infrastructure
+# - Configure executor service
+#
+# Usage: cdk-erigon --config custom-cdk.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Data Storage
+# -----------------------------------------------------------------------------
+
+datadir: <DATA_DIRECTORY>                # Example: /data/my-cdk-chain
+
+# -----------------------------------------------------------------------------
+# Network Selection
+# -----------------------------------------------------------------------------
+# For custom chains, use a base preset and override with your settings.
+
+chain: hermez-dev                        # Base preset (hermez-dev for custom chains)
+
+# -----------------------------------------------------------------------------
+# L2 Network Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.l2-chain-id: <YOUR_L2_CHAIN_ID>    # Your custom L2 chain ID (e.g., 10001)
+zkevm.l2-sequencer-rpc-url: <YOUR_SEQUENCER_RPC>  # Your sequencer RPC URL
+zkevm.l2-datastreamer-url: <YOUR_DATASTREAM_URL>  # Your data stream endpoint (host:port)
+
+# -----------------------------------------------------------------------------
+# L1 Network Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.l1-chain-id: <L1_CHAIN_ID>         # L1 chain ID (1=mainnet, 11155111=sepolia)
+zkevm.l1-rpc-url: <L1_RPC_URL>           # L1 RPC endpoint with archive access
+zkevm.l1-first-block: <DEPLOYMENT_BLOCK> # L1 block when contracts were deployed
+zkevm.l1-block-range: 20000              # L1 blocks per query (adjust for RPC limits)
+zkevm.l1-query-delay: 6000               # Delay between L1 queries (ms)
+zkevm.l1-highest-block-type: finalized   # Block finality: finalized, safe, latest
+
+# -----------------------------------------------------------------------------
+# Contract Addresses
+# -----------------------------------------------------------------------------
+# Get these from your CDK deployment output.
+
+zkevm.address-sequencer: "<SEQUENCER_ADDRESS>"     # Trusted sequencer EOA
+zkevm.address-zkevm: "<ZKEVM_CONTRACT>"            # PolygonZkEVM proxy contract
+zkevm.address-rollup: "<ROLLUP_MANAGER>"           # PolygonRollupManager contract
+zkevm.address-ger-manager: "<GER_MANAGER>"         # GlobalExitRootManager contract
+
+# -----------------------------------------------------------------------------
+# L1 Rollup Settings
+# -----------------------------------------------------------------------------
+
+zkevm.l1-rollup-id: <ROLLUP_ID>          # Your rollup ID in RollupManager (usually 1)
+
+# -----------------------------------------------------------------------------
+# Gas Price Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.default-gas-price: 1000000000      # Default gas price in wei (1 gwei)
+zkevm.max-gas-price: 0                   # Max gas price (0 = no limit)
+zkevm.gas-price-factor: 0.1              # Gas price estimation factor
+
+# -----------------------------------------------------------------------------
+# Executor Configuration (Sequencer Only)
+# -----------------------------------------------------------------------------
+# Required for sequencer nodes. RPC nodes can omit this section.
+
+# zkevm.executor-urls: <EXECUTOR_URL>    # Executor service URL (host:port)
+# zkevm.executor-strict: true            # Strict mode for transaction validation
+
+# -----------------------------------------------------------------------------
+# Data Stream Configuration (Sequencer Only)
+# -----------------------------------------------------------------------------
+# Enable if running as a sequencer that serves RPC nodes.
+
+# zkevm.data-stream-host: 0.0.0.0        # Data stream listen address
+# zkevm.data-stream-port: 6900           # Data stream port
+
+# -----------------------------------------------------------------------------
+# Contract Address Verification
+# -----------------------------------------------------------------------------
+# Enable to verify contract addresses match on-chain values.
+
+zkevm.l1-contract-address-check: true    # Verify addresses against L1 contracts
+zkevm.l1-contract-address-retrieve: true # Auto-retrieve addresses from L1 if needed
+
+# -----------------------------------------------------------------------------
+# JSON-RPC Configuration
+# -----------------------------------------------------------------------------
+
+http: true                               # Enable HTTP JSON-RPC
+http.addr: 0.0.0.0                       # Listen address (0.0.0.0 = all interfaces)
+http.port: 8545                          # HTTP RPC port
+http.api: [eth, debug, net, trace, web3, erigon, zkevm]  # Enabled namespaces
+http.vhosts: any                         # Allowed virtual hosts
+http.corsdomain: any                     # CORS allowed origins
+
+# -----------------------------------------------------------------------------
+# WebSocket Configuration
+# -----------------------------------------------------------------------------
+
+ws: true                                 # Enable WebSocket RPC
+ws.port: 8546                            # WebSocket port
+
+# -----------------------------------------------------------------------------
+# Internal Services
+# -----------------------------------------------------------------------------
+
+private.api.addr: localhost:9091         # Internal gRPC API
+externalcl: true                         # Disable built-in consensus (required)
+
+# -----------------------------------------------------------------------------
+# Transaction Pool
+# -----------------------------------------------------------------------------
+
+txpool.disable: true                     # Disable for RPC nodes, enable for sequencers
+
+# -----------------------------------------------------------------------------
+# Optional: Development/Debug Settings
+# -----------------------------------------------------------------------------
+
+# debug.timers: true                     # Enable performance timing
+# zkevm.debug-no-sync: true              # Disable sync for testing
+# zkevm.shadow-sequencer: true           # Shadow mode (sync without producing)

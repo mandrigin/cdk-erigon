@@ -1,0 +1,161 @@
+# =============================================================================
+# zkEVM Mainnet Sequencer Configuration
+# =============================================================================
+# This configuration runs a sequencer node that produces blocks and batches.
+# Sequencers require executor access and expose data streams for RPC nodes.
+#
+# WARNING: Running a sequencer requires proper authorization and setup.
+# This config is for reference only.
+#
+# Usage: cdk-erigon --config mainnet-sequencer.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Data Storage
+# -----------------------------------------------------------------------------
+
+datadir: /data/cdk-erigon-sequencer      # Directory for blockchain data and sequencer state
+
+# -----------------------------------------------------------------------------
+# Network Selection
+# -----------------------------------------------------------------------------
+
+chain: hermez-mainnet                    # Network preset
+
+# -----------------------------------------------------------------------------
+# L2 Network Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.l2-chain-id: 1101                  # zkEVM mainnet chain ID
+
+# -----------------------------------------------------------------------------
+# L1 Ethereum Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.l1-chain-id: 1                     # Ethereum mainnet chain ID
+zkevm.l1-rpc-url: https://eth.drpc.org   # L1 RPC URL (archive access recommended)
+zkevm.l1-first-block: 16896700           # First L1 block with zkEVM events
+zkevm.l1-block-range: 20000              # L1 blocks per query batch
+zkevm.l1-query-delay: 6000               # Query delay (ms) for rate limiting
+zkevm.l1-highest-block-type: finalized   # Block finality: finalized, safe, or latest
+
+# -----------------------------------------------------------------------------
+# Contract Addresses (zkEVM Mainnet)
+# -----------------------------------------------------------------------------
+
+zkevm.address-sequencer: "0x148Ee7dAF16574cD020aFa34CC658f8F3fbd2800"  # Trusted sequencer
+zkevm.address-zkevm: "0x519E42c24163192Dca44CD3fBDCEBF6be9130987"     # zkEVM contract
+zkevm.address-rollup: "0x5132A183E9F3CB7C848b0AAC5Ae0c4f0491B7aB2"    # Rollup manager
+zkevm.address-ger-manager: "0x580bda1e7A0CFAe92Fa7F6c20A3794F169CE3CFb"  # GER manager
+
+# -----------------------------------------------------------------------------
+# Executor Configuration
+# -----------------------------------------------------------------------------
+# Executors verify transactions and generate ZK proofs. Required for sequencing.
+
+zkevm.executor-urls: executor1.example.com:50071,executor2.example.com:50071  # Executor endpoints
+zkevm.executor-strict: true              # Strict mode: reject invalid transactions
+zkevm.executor-request-timeout: 60s      # Timeout for executor requests
+zkevm.executor-max-concurrent-requests: 100  # Max parallel executor requests
+
+# -----------------------------------------------------------------------------
+# Sequencer Timing Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.sequencer-block-seal-time: 2s      # Time to wait before sealing a block
+zkevm.sequencer-empty-block-seal-time: 10s  # Time for empty blocks (no transactions)
+zkevm.sequencer-batch-seal-time: 60s     # Time to wait before sealing a batch
+zkevm.sequencer-batch-verification-timeout: 300s  # Batch verification timeout
+zkevm.sequencer-batch-verification-retries: 3     # Retry count for failed verifications
+zkevm.sequencer-timeout-on-empty-txpool: 5s       # Idle timeout when txpool is empty
+zkevm.seal-batch-immediately-on-overflow: true    # Seal immediately if batch exceeds limits
+
+# -----------------------------------------------------------------------------
+# Data Stream Server Configuration
+# -----------------------------------------------------------------------------
+# Sequencers expose data streams for RPC nodes to sync from.
+
+zkevm.data-stream-host: 0.0.0.0          # Data stream listen address
+zkevm.data-stream-port: 6900             # Data stream port (default: 6900)
+zkevm.data-stream-write-timeout: 10s     # Write timeout for stream clients
+zkevm.data-stream-inactivity-timeout: 120s  # Disconnect inactive clients after this time
+zkevm.data-stream-inactivity-check-interval: 30s  # Check interval for inactive clients
+
+# -----------------------------------------------------------------------------
+# Gas Price Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.default-gas-price: 1000000000      # Default gas price (1 gwei)
+zkevm.max-gas-price: 0                   # Max gas price (0 = no limit)
+zkevm.gas-price-factor: 0.0375           # Gas price estimation multiplier
+
+# -----------------------------------------------------------------------------
+# Effective Gas Price Weights
+# -----------------------------------------------------------------------------
+# Weights for different transaction types (used in gas estimation).
+
+zkevm.effective-gas-price-for-eth-transfer: 100     # Weight for ETH transfers
+zkevm.effective-gas-price-for-erc20-transfer: 100   # Weight for ERC20 transfers
+zkevm.effective-gas-price-for-contract-invocation: 100  # Weight for contract calls
+zkevm.effective-gas-price-for-contract-deployment: 100  # Weight for deployments
+
+# -----------------------------------------------------------------------------
+# Transaction Pool Configuration
+# -----------------------------------------------------------------------------
+
+txpool.disable: false                    # Enable transaction pool (required for sequencing)
+zkevm.allow-free-transactions: false     # Reject zero gas price transactions
+zkevm.allow-pre-eip155-transactions: false  # Reject legacy transactions without chain ID
+zkevm.reject-low-gas-price-transactions: true   # Reject below minimum gas price
+zkevm.reject-low-gas-price-tolerance: 0.1       # Tolerance (10%) for gas price rejection
+
+# -----------------------------------------------------------------------------
+# State Trie Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.initial-commitment: smt            # State trie type: smt (Sparse Merkle Tree)
+zkevm.smt-regenerate-in-memory: false    # Use disk for SMT regeneration (lower memory)
+zkevm.rebuild-tree-after: 0              # Rebuild tree after N batches (0 = never)
+
+# -----------------------------------------------------------------------------
+# Virtual Counter Configuration
+# -----------------------------------------------------------------------------
+# Virtual counters track ZK proof resource usage.
+
+zkevm.disable-virtual-counters: false    # Enable virtual counter tracking
+zkevm.virtual-counters-smt-reduction: 0.0  # SMT reduction factor (0 = disabled)
+
+# -----------------------------------------------------------------------------
+# JSON-RPC Configuration
+# -----------------------------------------------------------------------------
+
+http: true                               # Enable HTTP JSON-RPC
+http.addr: 0.0.0.0                       # Listen on all interfaces
+http.port: 8545                          # HTTP RPC port
+http.api: [eth, debug, net, trace, web3, erigon, txpool, zkevm]  # Include txpool for sequencer
+http.vhosts: any                         # Allowed virtual hosts
+http.corsdomain: any                     # CORS origins
+
+# -----------------------------------------------------------------------------
+# WebSocket Configuration
+# -----------------------------------------------------------------------------
+
+ws: true                                 # Enable WebSocket RPC
+ws.port: 8546                            # WebSocket port
+
+# -----------------------------------------------------------------------------
+# Internal Services
+# -----------------------------------------------------------------------------
+
+private.api.addr: localhost:9091         # Internal gRPC API
+externalcl: true                         # Disable built-in consensus layer
+
+# -----------------------------------------------------------------------------
+# Advanced Options
+# -----------------------------------------------------------------------------
+
+# zkevm.sequencer-halt-on-batch-number: 0   # Halt at specific batch (0 = disabled)
+# zkevm.sequencer-resequence: false         # Enable resequencing mode
+# zkevm.panic-on-reorg: false               # Panic on chain reorganization
+# zkevm.shadow-sequencer: false             # Shadow mode (sync only, don't produce)
+# debug.timers: true                        # Enable performance timing

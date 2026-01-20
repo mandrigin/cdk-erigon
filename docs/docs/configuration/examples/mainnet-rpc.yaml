@@ -1,0 +1,97 @@
+# =============================================================================
+# zkEVM Mainnet RPC Node Configuration
+# =============================================================================
+# This configuration runs a full RPC node connected to zkEVM mainnet.
+# The node syncs from the official sequencer and provides JSON-RPC access.
+#
+# Usage: cdk-erigon --config mainnet-rpc.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Data Storage
+# -----------------------------------------------------------------------------
+
+datadir: /data/cdk-erigon                # Directory for blockchain data, state, and indexes
+
+# -----------------------------------------------------------------------------
+# Network Selection
+# -----------------------------------------------------------------------------
+
+chain: hermez-mainnet                    # Network preset (hermez-mainnet, hermez-cardona, hermez-bali)
+
+# -----------------------------------------------------------------------------
+# L2 Network Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.l2-chain-id: 1101                  # zkEVM mainnet chain ID (1101)
+zkevm.l2-sequencer-rpc-url: https://zkevm-rpc.com  # Official sequencer RPC for tx submission
+zkevm.l2-datastreamer-url: stream.zkevm-rpc.com:6900  # Data stream endpoint for block sync
+
+# -----------------------------------------------------------------------------
+# L1 Ethereum Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.l1-chain-id: 1                     # Ethereum mainnet chain ID
+zkevm.l1-rpc-url: https://eth.drpc.org   # L1 RPC URL (use reliable provider with archive access)
+zkevm.l1-first-block: 16896700           # First L1 block with zkEVM contract events
+zkevm.l1-block-range: 20000              # Number of L1 blocks to query per batch
+zkevm.l1-query-delay: 6000               # Delay (ms) between L1 queries to avoid rate limits
+
+# -----------------------------------------------------------------------------
+# Contract Addresses (zkEVM Mainnet)
+# -----------------------------------------------------------------------------
+# These addresses are specific to zkEVM mainnet. Do not change unless deploying
+# a custom network.
+
+zkevm.address-sequencer: "0x148Ee7dAF16574cD020aFa34CC658f8F3fbd2800"  # Trusted sequencer address
+zkevm.address-zkevm: "0x519E42c24163192Dca44CD3fBDCEBF6be9130987"     # zkEVM contract on L1
+zkevm.address-rollup: "0x5132A183E9F3CB7C848b0AAC5Ae0c4f0491B7aB2"    # Rollup manager contract
+zkevm.address-ger-manager: "0x580bda1e7A0CFAe92Fa7F6c20A3794F169CE3CFb"  # Global Exit Root manager
+
+# -----------------------------------------------------------------------------
+# Gas Price Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.default-gas-price: 1000000000      # Default gas price in wei (1 gwei)
+zkevm.max-gas-price: 0                   # Max gas price (0 = no limit)
+zkevm.gas-price-factor: 0.0375           # Gas price multiplier for estimation
+
+# -----------------------------------------------------------------------------
+# L1 Rollup Settings
+# -----------------------------------------------------------------------------
+
+zkevm.l1-rollup-id: 1                    # Rollup ID within the rollup manager
+
+# -----------------------------------------------------------------------------
+# JSON-RPC Configuration
+# -----------------------------------------------------------------------------
+
+http: true                               # Enable HTTP JSON-RPC server
+http.addr: 0.0.0.0                       # Listen on all interfaces (use 127.0.0.1 for local only)
+http.port: 8545                          # HTTP RPC port (default: 8545)
+http.api: [eth, debug, net, trace, web3, erigon, zkevm]  # Enabled API namespaces
+http.vhosts: any                         # Allowed virtual hosts (any = all)
+http.corsdomain: any                     # CORS allowed origins (any = all)
+
+# -----------------------------------------------------------------------------
+# WebSocket Configuration
+# -----------------------------------------------------------------------------
+
+ws: true                                 # Enable WebSocket RPC
+ws.port: 8546                            # WebSocket port (default: 8546)
+
+# -----------------------------------------------------------------------------
+# Internal Services
+# -----------------------------------------------------------------------------
+
+private.api.addr: localhost:9091         # Internal gRPC API address
+externalcl: true                         # Disable built-in consensus layer (required for zkEVM)
+
+# -----------------------------------------------------------------------------
+# Performance Tuning (Optional)
+# -----------------------------------------------------------------------------
+# Uncomment to enable:
+
+# debug.timers: true                     # Enable performance timing logs
+# zkevm.smt-regenerate-in-memory: true   # Use RAM for SMT regeneration (faster, more memory)
+# zkevm.sync-limit: 0                    # Batch sync limit (0 = unlimited)
