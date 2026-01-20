@@ -1,0 +1,112 @@
+# =============================================================================
+# zkEVM Cardona Testnet Configuration
+# =============================================================================
+# This configuration runs an RPC node connected to zkEVM Cardona testnet.
+# Cardona is the primary public testnet for zkEVM development and testing.
+#
+# L1: Sepolia (Ethereum testnet)
+# L2: Cardona (zkEVM testnet)
+#
+# Usage: cdk-erigon --config cardona-testnet.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Data Storage
+# -----------------------------------------------------------------------------
+
+datadir: /data/cdk-erigon-cardona        # Directory for testnet data (keep separate from mainnet)
+
+# -----------------------------------------------------------------------------
+# Network Selection
+# -----------------------------------------------------------------------------
+
+chain: hermez-cardona                    # Cardona testnet preset
+
+# -----------------------------------------------------------------------------
+# L2 Network Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.l2-chain-id: 2442                  # Cardona testnet chain ID
+zkevm.l2-sequencer-rpc-url: https://rpc.cardona.zkevm-rpc.com/  # Cardona sequencer RPC
+zkevm.l2-datastreamer-url: datastream.cardona.zkevm-rpc.com:6900  # Cardona data stream
+
+# -----------------------------------------------------------------------------
+# L1 Ethereum Configuration (Sepolia)
+# -----------------------------------------------------------------------------
+
+zkevm.l1-chain-id: 11155111              # Sepolia testnet chain ID
+zkevm.l1-rpc-url: https://rpc.sepolia.org  # Sepolia RPC endpoint
+zkevm.l1-first-block: 4789190            # First L1 block with Cardona contract events
+zkevm.l1-block-range: 20000              # L1 blocks per query batch
+zkevm.l1-query-delay: 6000               # Query delay (ms) for rate limiting
+
+# -----------------------------------------------------------------------------
+# Contract Addresses (Cardona Testnet)
+# -----------------------------------------------------------------------------
+# These addresses are specific to Cardona testnet on Sepolia.
+
+zkevm.address-sequencer: "0x761d53b47334bee6612c0bd1467fb881435375b2"  # Cardona sequencer
+zkevm.address-zkevm: "0xA13Ddb14437A8F34897131367ad3ca78416d6bCa"     # zkEVM contract
+zkevm.address-rollup: "0x32d33d5137a7cffb54c5bf8371172bcec5f310ff"    # Rollup manager
+zkevm.address-ger-manager: "0xAd1490c248c5d3CbAE399Fd529b79B42984277DF"  # GER manager
+
+# -----------------------------------------------------------------------------
+# L1 Rollup Settings
+# -----------------------------------------------------------------------------
+
+zkevm.l1-rollup-id: 1                    # Rollup ID in rollup manager
+
+# -----------------------------------------------------------------------------
+# Gas Price Configuration
+# -----------------------------------------------------------------------------
+
+zkevm.default-gas-price: 1000000000      # Default gas price (1 gwei)
+zkevm.max-gas-price: 0                   # Max gas price (0 = no limit)
+zkevm.gas-price-factor: 0.12             # Gas price factor (higher than mainnet for testnet)
+
+# -----------------------------------------------------------------------------
+# Transaction Pool Configuration
+# -----------------------------------------------------------------------------
+# Disable txpool for RPC-only nodes (saves resources).
+
+txpool.disable: true                     # Disable transaction pool (RPC nodes don't need it)
+
+# -----------------------------------------------------------------------------
+# P2P Networking
+# -----------------------------------------------------------------------------
+
+torrent.port: 42070                      # BitTorrent port for snapshot downloads
+
+# -----------------------------------------------------------------------------
+# JSON-RPC Configuration
+# -----------------------------------------------------------------------------
+
+http: true                               # Enable HTTP JSON-RPC
+http.addr: 0.0.0.0                       # Listen on all interfaces
+http.port: 8545                          # HTTP RPC port
+http.api: [eth, debug, net, trace, web3, erigon, zkevm]  # Enabled API namespaces
+http.vhosts: any                         # Allowed virtual hosts
+http.corsdomain: any                     # CORS allowed origins
+
+# -----------------------------------------------------------------------------
+# WebSocket Configuration
+# -----------------------------------------------------------------------------
+
+ws: true                                 # Enable WebSocket RPC
+ws.port: 8546                            # WebSocket port
+
+# -----------------------------------------------------------------------------
+# Internal Services
+# -----------------------------------------------------------------------------
+
+private.api.addr: localhost:9092         # Internal gRPC API (different port from mainnet)
+externalcl: true                         # Disable built-in consensus layer
+
+# -----------------------------------------------------------------------------
+# Development Options
+# -----------------------------------------------------------------------------
+# Uncomment for development and debugging:
+
+# debug.timers: true                     # Enable performance timing
+# log.console.verbosity: debug           # Increase log verbosity
+# zkevm.debug-no-sync: true              # Disable sync (for testing)
