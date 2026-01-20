@@ -1,33 +1,68 @@
 ---
 sidebar_position: 2
-title: Type1 vs Type2 zkEVM Migration
-description: Understanding zkEVM execution types and migrating from Type2 to Type1
+title: zkEVM Execution Modes and Provers
+description: Understanding Type1/Type2 zkEVM modes, provers, and verification mechanisms
 ---
 
-# Type1 vs Type2 zkEVM Migration
+# zkEVM Execution Modes and Provers
 
-This guide explains the differences between Type1 and Type2 zkEVM execution modes in cdk-erigon and how to migrate between them.
+This guide explains the different execution modes, prover systems, and verification mechanisms in cdk-erigon.
 
-## Overview
+## Architecture Overview
 
-cdk-erigon supports two execution types that differ in state commitment and EVM compatibility:
+cdk-erigon supports multiple configurations across three dimensions:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     EXECUTION TYPE                              │
+├─────────────────────────────────────────────────────────────────┤
+│  Type2 (zkEVM)              │  Type1 (Normalcy)                 │
+│  - SMT state trie           │  - PMT state trie                 │
+│  - zkEVM interpreter        │  - Standard EVM interpreter       │
+│  - Virtual counters ON      │  - Virtual counters OFF           │
+│  - Hermez prover            │  - SP1 prover                     │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   VERIFICATION MODE                             │
+├─────────────────────────────────────────────────────────────────┤
+│  FEP (Full Execution Proof) │  PP (Pessimistic Proof)           │
+│  - Complete ZK proofs       │  - Optimistic verification        │
+│  - Executor required        │  - No executor required           │
+│  - Higher security          │  - Faster finality                │
+│  - Counters enforced        │  - Counters disabled              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   DATA AVAILABILITY                             │
+├─────────────────────────────────────────────────────────────────┤
+│  Rollup Mode                │  Sovereign/Validium Mode          │
+│  - Data posted to L1        │  - Off-chain DA                   │
+│  - Full L1 verification     │  - Independent operation          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Execution Types Comparison
 
 | Aspect | Type2 (zkEVM) | Type1 (Normalcy) |
 |--------|---------------|------------------|
 | State Trie | Sparse Merkle Tree (SMT) | Patricia Merkle Trie (PMT) |
 | EVM Interpreter | zkEVM Interpreter | Standard EVM Interpreter |
 | Virtual Counters | **Enabled** | **Disabled** |
-| ZK Proof Generation | Full ZK proofs | Pessimistic proofs (PP) |
-| Ethereum Compatibility | Modified opcodes | Full Ethereum compatibility |
+| Prover | Hermez zkEVM prover | SP1 prover |
+| Verification Modes | FEP or PP | FEP or PP |
+| Ethereum Compatibility | Modified opcodes | Full Ethereum equivalence |
 
-## Type2: zkEVM Mode (Default)
+## Type2: zkEVM Mode
 
-Type2 is the traditional zkEVM execution mode:
+Type2 is the traditional zkEVM execution mode using the Hermez prover:
 
-- **Sparse Merkle Tree (SMT)**: Uses a zkEVM-specific state trie optimized for ZK proof generation
+- **Sparse Merkle Tree (SMT)**: zkEVM-specific state trie optimized for ZK circuits
 - **zkEVM Interpreter**: Modified EVM with zkEVM-specific opcode behavior
 - **Virtual Counters**: Tracks computational resources for ZK circuit constraints
-- **Full ZK Proofs**: Generates complete zero-knowledge proofs for every batch
+- **Hermez Prover**: Generates zkEVM-specific proofs
 
 ```go
 // From core/vm/evm.go - Type2 uses zkEVM interpreter
@@ -36,20 +71,44 @@ if !evm.ChainRules().IsNormalcy {
 }
 ```
 
+### Type2 with FEP Mode (Full Proving)
+
+Full execution proofs with Hermez executor:
+
+```yaml
+# Type2 + FEP: Full zkEVM proving
+zkevm.executor-urls: "executor:50071"
+zkevm.executor-strict: true
+zkevm.executor-enabled: true
+zkevm.disable-virtual-counters: false
+```
+
+### Type2 with PP Mode (Pessimistic)
+
+Pessimistic proofs without full ZK verification:
+
+```yaml
+# Type2 + PP: Pessimistic mode
+zkevm.executor-strict: false
+zkevm.executor-enabled: false
+zkevm.disable-virtual-counters: true
+zkevm.pessimistic-fork-number: 12
+```
+
 ### When to Use Type2
 
-- Networks requiring full zkEVM proving
-- Chains that need zkEVM-specific features
+- Networks requiring zkEVM-specific features
+- Chains using Hermez prover infrastructure
 - Legacy CDK chains before Normalcy upgrade
 
 ## Type1: Normalcy Mode
 
-Type1 enables full Ethereum compatibility through "Normalcy" mode:
+Type1 enables full Ethereum compatibility using the SP1 prover:
 
 - **Patricia Merkle Trie (PMT)**: Standard Ethereum state trie
 - **Standard EVM Interpreter**: Unmodified Ethereum opcodes
 - **No Virtual Counters**: ZK resource tracking is disabled
-- **Pessimistic Proofs**: Uses PP mode for verification instead of full ZK proofs
+- **SP1 Prover**: Generates Ethereum-compatible proofs
 
 ```go
 // From core/genesis_write.go - Type1 requires both PMT and Normalcy
@@ -57,19 +116,156 @@ type1 := usingPmt && normalcy
 statedb.SetIsType1(type1)
 ```
 
+### Type1 with FEP Mode (Full Proving)
+
+Full execution proofs with SP1:
+
+```yaml
+# Type1 + FEP: Full SP1 proving (future)
+# Note: SP1 executor integration in development
+zkevm.executor-strict: false
+zkevm.executor-enabled: false
+# SP1 prover configured externally
+```
+
+### Type1 with PP Mode (Pessimistic)
+
+Pessimistic proofs for fastest finality:
+
+```yaml
+# Type1 + PP: Pessimistic Normalcy mode
+zkevm.executor-strict: false
+zkevm.executor-enabled: false
+zkevm.disable-virtual-counters: true
+zkevm.pessimistic-fork-number: 12
+```
+
 ### When to Use Type1
 
-- Networks migrating to full Ethereum equivalence
-- Chains using Pessimistic Proof (PP) mode
-- New CDK deployments targeting Ethereum compatibility
+- Networks targeting full Ethereum equivalence
+- Chains using SP1 prover infrastructure
+- New CDK deployments prioritizing compatibility
 
-## Virtual Counters Behavior
+## Verification Modes: FEP vs PP
 
-Virtual counters track zkEVM computational resources. They are automatically disabled in:
+### FEP (Full Execution Proof)
 
-1. **Type1/Normalcy mode**: Full Ethereum compatibility means no ZK constraints
-2. **L1 Recovery mode**: Counters unlimited during chain recovery
-3. **Pessimistic Proof (PP) mode**: PP doesn't require ZK counter tracking
+FEP mode generates complete zero-knowledge proofs for every batch:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FEP Verification Flow                    │
+├─────────────────────────────────────────────────────────────┤
+│  Sequencer → Executor → Prover → L1 Verification           │
+│                                                             │
+│  1. Sequencer creates batch with transactions               │
+│  2. Executor verifies execution and generates witness       │
+│  3. Prover generates ZK proof (Hermez or SP1)              │
+│  4. Proof submitted to L1 for verification                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Characteristics:**
+- Full ZK proof generation for each batch
+- Virtual counters **required** (Type2) or disabled (Type1)
+- Executor verification before proving
+- Highest security guarantees
+
+**Configuration:**
+```yaml
+# FEP mode with executor
+zkevm.executor-urls: "executor:50071"
+zkevm.executor-strict: true
+zkevm.executor-enabled: true
+```
+
+### PP (Pessimistic Proof)
+
+PP mode uses optimistic verification without full ZK proofs:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PP Verification Flow                     │
+├─────────────────────────────────────────────────────────────┤
+│  Sequencer → (No Executor) → L1 Submission                  │
+│                                                             │
+│  1. Sequencer creates batch with transactions               │
+│  2. Batch submitted to L1 without ZK proof                  │
+│  3. Challenge period for fraud proofs                       │
+│  4. Finalization after challenge period                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Characteristics:**
+- No ZK proof generation
+- Virtual counters **disabled**
+- Faster batch finality
+- Relies on challenge mechanism
+
+**Configuration:**
+```yaml
+# PP mode - no executor needed
+zkevm.executor-strict: false
+zkevm.executor-enabled: false
+zkevm.disable-virtual-counters: true
+zkevm.pessimistic-fork-number: 12
+```
+
+### When PP Fork Number is Required
+
+The `zkevm.pessimistic-fork-number` flag **must be set** when the network has never had an FEP rollup type assigned:
+
+```go
+// From zk/da/blob_da.go
+if len(allForks) == 1 && allForks[0] == 0 {
+    ppFork := zkCfg.PessimisticForkNumber
+    if ppFork == 0 {
+        return 0, nil, fmt.Errorf("zkevm.pessimistic-fork-number flag must be set...")
+    }
+}
+```
+
+## Prover Systems
+
+### Hermez Prover (Type2)
+
+The Hermez prover is used with Type2 zkEVM execution:
+
+- Designed for zkEVM-specific circuits
+- Requires virtual counters for resource tracking
+- Communicates via gRPC with executor
+
+**Executor Configuration:**
+```yaml
+# Hermez executor setup
+zkevm.executor-urls: "executor1:50071,executor2:50071"
+zkevm.executor-strict: true
+zkevm.executor-enabled: true
+zkevm.executor-request-timeout: 60s
+zkevm.executor-max-concurrent-requests: 1
+```
+
+### SP1 Prover (Type1)
+
+The SP1 prover is used with Type1 Normalcy execution:
+
+- Ethereum-compatible proving system
+- Works with standard PMT state trie
+- No virtual counter requirements
+
+**Note**: SP1 integration is configured externally to cdk-erigon.
+
+## Virtual Counters
+
+Virtual counters track zkEVM computational resources for ZK circuit constraints.
+
+### When Counters Are Disabled
+
+Counters are automatically unlimited in:
+
+1. **Type1/Normalcy mode**: Full Ethereum compatibility
+2. **L1 Recovery mode**: During chain recovery
+3. **PP mode**: Pessimistic proofs don't need counters
 
 ```go
 // From eth/ethconfig/config_zkevm.go
@@ -80,53 +276,85 @@ func (c *Zk) ShouldCountersBeUnlimited(l1Recovery bool) bool {
 
 ### Manual Counter Disable
 
-You can manually disable virtual counters on a sequencer without an external executor:
+Disable counters on a sequencer without external executor:
 
 ```yaml
-# Disable virtual counters (sequencer only, no executor)
 zkevm.disable-virtual-counters: true
 zkevm.executor-strict: false
 ```
 
 **Restrictions:**
-- Cannot disable counters with `executor-strict: true`
-- Cannot disable counters when using external executors
+- Cannot disable with `executor-strict: true`
+- Cannot disable when using external executors
 - Only effective on sequencer nodes
 
-## Pessimistic Proof (PP) Mode
+## Sovereign Mode
 
-Pessimistic Proof mode is an alternative verification mechanism that doesn't require full ZK proof generation:
+Sovereign mode allows running a CDK chain independently without L1 verification:
+
+### Characteristics
+
+- **No L1 Dependency**: Chain operates independently
+- **Off-chain DA**: Data availability handled externally
+- **Self-Verification**: No external proof verification
+- **Full Control**: Network operator manages all aspects
 
 ### Configuration
 
 ```yaml
-# Enable PP mode by setting the fork number
-zkevm.pessimistic-fork-number: 12
-
-# PP mode works with these settings
-zkevm.disable-virtual-counters: true
+# Sovereign mode - minimal L1 interaction
+zkevm.l1-sync-start-block: 0  # No L1 sync
 zkevm.executor-strict: false
 zkevm.executor-enabled: false
+
+# Optional: Use local DA
+zkevm.da-url: "http://localhost:8080"
 ```
 
-### Key Characteristics
+### Use Cases
 
-- **No ZK Counters**: Virtual counters are disabled in PP mode
-- **Faster Verification**: PP verification is faster than full ZK proving
-- **Fork-Based Activation**: Activates at specified fork number
+- Private enterprise chains
+- Development/testing environments
+- Chains with custom DA solutions
+- Networks transitioning to full rollup mode
 
-### When PP Fork Number is Required
+## Limbo Recovery Mode
 
-The `zkevm.pessimistic-fork-number` flag **must be set** when:
+Limbo mode handles batches that fail executor verification:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Limbo Recovery Flow                      │
+├─────────────────────────────────────────────────────────────┤
+│  1. Batch fails executor verification                       │
+│  2. Transactions moved to "limbo" pool                      │
+│  3. System attempts re-execution with modifications         │
+│  4. Valid transactions reprocessed in new batch             │
+│  5. Invalid transactions discarded                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Configuration
+
+```yaml
+# Enable limbo processing
+zkevm.limbo: true
+```
+
+### Behavior
+
+- **L1 Recovery Mode**: Limbo is bypassed (infinite loop on verification failure)
+- **Default Mode + Limbo Disabled**: Also enters infinite loop
+- **Default Mode + Limbo Enabled**: Transactions recovered and reprocessed
 
 ```go
-// From zk/da/blob_da.go
-if len(allForks) == 1 && allForks[0] == 0 {
-    // Network never had FEP rollup type assigned
-    ppFork := zkCfg.PessimisticForkNumber
-    if ppFork == 0 {
-        return 0, nil, fmt.Errorf("zkevm.pessimistic-fork-number flag must be set...")
-    }
+// From zk/stages/stage_sequence_execute_batch.go
+if batchState.isL1Recovery() || !batchContext.cfg.zk.Limbo {
+    infiniteLoop(verifierBundle.Request.BatchNumber)
+}
+// Otherwise, handle limbo recovery
+if err = handleLimbo(batchContext, batchState, verifierBundle); err != nil {
+    return false, err
 }
 ```
 
@@ -202,36 +430,89 @@ curl -X POST http://localhost:8545 \
 grep -i "counter" /path/to/erigon.log
 ```
 
-## Configuration Reference
+## Configuration Matrix
 
-### Type2 (zkEVM) Configuration
+### Complete Mode Combinations
+
+| Mode | Execution | Verification | Prover | Counters | Use Case |
+|------|-----------|--------------|--------|----------|----------|
+| Type2 + FEP | zkEVM/SMT | Full ZK | Hermez | Enabled | Production zkEVM |
+| Type2 + PP | zkEVM/SMT | Pessimistic | None | Disabled | Fast Type2 finality |
+| Type1 + FEP | EVM/PMT | Full ZK | SP1 | Disabled | Production Ethereum-equiv |
+| Type1 + PP | EVM/PMT | Pessimistic | None | Disabled | Fast Ethereum-equiv |
+| Sovereign | Either | None | None | Disabled | Independent chains |
+
+### Configuration Reference
+
+#### Type2 + FEP (Full zkEVM Proving)
 
 ```yaml
-# Full zkEVM with executor
+# Production zkEVM with Hermez executor
 zkevm.executor-urls: "executor1:50071,executor2:50071"
 zkevm.executor-strict: true
 zkevm.executor-enabled: true
 zkevm.disable-virtual-counters: false
+
+# Witness generation for prover
+zkevm.witness-full: true
+zkevm.witness-memdb-size: 2GB
 ```
 
-### Type1 (Normalcy/PP) Configuration
+#### Type2 + PP (Pessimistic zkEVM)
 
 ```yaml
-# Normalcy mode with PP
+# zkEVM without full proving
 zkevm.executor-strict: false
 zkevm.executor-enabled: false
 zkevm.disable-virtual-counters: true
 zkevm.pessimistic-fork-number: 12
 ```
 
-### Hybrid Configuration (Migration Period)
+#### Type1 + FEP (Ethereum-Equivalent with SP1)
 
 ```yaml
-# During migration - keep executor for pre-fork batches
+# Full Ethereum equivalence with SP1 proving
+# Note: SP1 prover configured externally
+zkevm.executor-strict: false
+zkevm.executor-enabled: false
+zkevm.disable-virtual-counters: true  # Type1 doesn't use counters
+# Chain config must have normalcyBlock set
+```
+
+#### Type1 + PP (Fast Ethereum-Equivalent)
+
+```yaml
+# Fastest Type1 configuration
+zkevm.executor-strict: false
+zkevm.executor-enabled: false
+zkevm.disable-virtual-counters: true
+zkevm.pessimistic-fork-number: 12
+```
+
+#### Sovereign Mode
+
+```yaml
+# Independent chain operation
+zkevm.executor-strict: false
+zkevm.executor-enabled: false
+zkevm.disable-virtual-counters: true
+
+# Minimal L1 configuration (or none)
+zkevm.l1-rpc-url: ""  # No L1 if truly sovereign
+zkevm.da-url: "http://custom-da:8080"  # Custom DA layer
+```
+
+#### Hybrid Configuration (Migration Period)
+
+```yaml
+# During Type2→Type1 migration
 zkevm.executor-urls: "executor:50071"
 zkevm.executor-strict: false  # Allow fallback
 zkevm.executor-enabled: true
 zkevm.pessimistic-fork-number: 12
+
+# Pre-fork: Uses executor
+# Post-fork: Falls back to PP
 ```
 
 ## Troubleshooting
@@ -262,6 +543,9 @@ External executors require counter tracking:
 
 ## See Also
 
-- [State Trie Configuration](../configuration/state-trie.md)
-- [zkEVM Flags Reference](../../reference/zkevm-flags.md)
-- [L1 Recovery Mode](../operations/l1-recovery.md)
+- [State Trie Configuration](../configuration/state-trie.md) - SMT vs PMT details
+- [zkEVM Flags Reference](../../reference/zkevm-flags.md) - Complete flag documentation
+- [L1 Recovery Mode](../operations/l1-recovery.md) - Chain recovery procedures
+- [Prover Integration](../integration/prover.md) - Executor and prover setup
+- [Architecture Overview](../integration/architecture-overview.md) - System components
+- [Data Stream Protocol](../architecture/data-stream-protocol.md) - Sequencer communication
