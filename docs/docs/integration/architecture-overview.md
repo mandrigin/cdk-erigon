@@ -10,24 +10,21 @@ Understanding cdk-erigon's role in the Polygon CDK stack.
 
 ## Component Diagram
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Polygon CDK Stack                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │   cdk-node  │    │ cdk-erigon  │    │   Prover    │     │
-│  │  (Sequence  │◄──►│ (Execution) │◄──►│   (ZK)      │     │
-│  │   Sender)   │    │             │    │             │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
-│         │                  │                  │             │
-│         │                  │                  │             │
-│         ▼                  ▼                  ▼             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │               L1 Ethereum (Settlement)               │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph CDK["Polygon CDK Stack"]
+        direction TB
+        subgraph Components["Core Components"]
+            direction LR
+            CDKNode["cdk-node<br/>(Sequence Sender)"]
+            CDKErigon["cdk-erigon<br/>(Execution)"]
+            Prover["Prover<br/>(ZK)"]
+            CDKNode <--> CDKErigon
+            CDKErigon <--> Prover
+        end
+        L1["L1 Ethereum (Settlement)"]
+        Components --> L1
+    end
 ```
 
 ## cdk-erigon Role

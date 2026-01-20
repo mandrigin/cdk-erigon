@@ -45,6 +45,20 @@ zkEVM uses a multi-stage finality model. See [Polygon's finality documentation](
 | **Virtual** | Submitted to L1, not yet proven | [`zkevm_virtualBatchNumber`](../api/zkevm/batch-methods#zkevm_virtualbatchnumber) |
 | **Verified** | ZK proof verified on L1 | [`zkevm_verifiedBatchNumber`](../api/zkevm/batch-methods#zkevm_verifiedbatchnumber) |
 
+```mermaid
+stateDiagram-v2
+    [*] --> Trusted: Sequencer processes transactions
+
+    Trusted --> Virtual: Batch submitted to L1
+    note right of Trusted: Local sequencer state
+
+    Virtual --> Verified: ZK proof verified on L1
+    note right of Virtual: On-chain, awaiting proof
+
+    Verified --> [*]: Final settlement
+    note right of Verified: Cryptographically proven
+```
+
 ## Operational Modes
 
 See [Operational Modes](../running/operational-modes) for detailed setup instructions.
@@ -70,6 +84,17 @@ Fork IDs track protocol upgrades. See [Polygon's upgrade documentation](https://
 | 4 | Initial Mainnet | [`zkevm_getForkId`](../api/zkevm/fork-methods#zkevm_getforkid) |
 | 5 | First upgrade | [`zkevm_getForkIdByBatchNumber`](../api/zkevm/fork-methods#zkevm_getforkidbybatchnumber) |
 | 6+ | Subsequent upgrades | See [Upgrading](../operations/upgrading) |
+
+```mermaid
+timeline
+    title zkEVM Fork ID Timeline
+    section Mainnet Launch
+        Fork 4 : Initial Mainnet : Base protocol
+    section Protocol Upgrades
+        Fork 5 : First upgrade : Performance improvements
+        Fork 6 : Etrog : EIP-4844 support
+        Fork 7+ : Future : Ongoing improvements
+```
 
 ## Next Steps
 

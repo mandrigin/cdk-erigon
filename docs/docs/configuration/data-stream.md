@@ -33,6 +33,24 @@ zkevm:
 - Streams blocks, batches, and state changes
 - Supports reconnection and resume
 
+```mermaid
+sequenceDiagram
+    participant Seq as Sequencer
+    participant DS as Data Stream Server
+    participant Client as RPC Node Client
+    participant State as Local State
+
+    Seq->>DS: New block produced
+    DS->>DS: Serialize block + state changes
+    DS->>Client: Stream binary data (TCP:6900)
+    Client->>Client: Deserialize & validate
+    Client->>State: Apply state changes
+
+    Note over Client,DS: Connection lost
+    Client->>DS: Reconnect with last block number
+    DS->>Client: Resume from checkpoint
+```
+
 ## Troubleshooting
 
 ### Connection Issues

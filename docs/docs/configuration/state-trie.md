@@ -8,6 +8,33 @@ description: Choosing between SMT and PMT state storage
 
 cdk-erigon supports two state trie implementations.
 
+```mermaid
+flowchart TB
+    subgraph SMT["Sparse Merkle Tree (SMT)"]
+        direction TB
+        PH["Poseidon Hash"]
+        ZKFriendly["ZK-Friendly"]
+        ProofGen["Proof Generation"]
+        PH --> ZKFriendly
+        ZKFriendly --> ProofGen
+    end
+
+    subgraph PMT["Patricia Merkle Trie (PMT)"]
+        direction TB
+        KH["Keccak Hash"]
+        EthCompat["Ethereum Compatible"]
+        Tooling["Standard Tooling"]
+        KH --> EthCompat
+        EthCompat --> Tooling
+    end
+
+    State["Account State"] --> SMT
+    State --> PMT
+
+    SMT -->|"required for"| ZKProofs["ZK Proof Verification"]
+    PMT -->|"faster for"| DevOps["Development & Debugging"]
+```
+
 ## Sparse Merkle Tree (SMT)
 
 - Uses Poseidon hashing (ZK-friendly)

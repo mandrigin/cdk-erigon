@@ -31,6 +31,26 @@ zkevm:
 3. Optionally set `sync-limit` to limit sync height
 4. Start cdk-erigon
 
+```mermaid
+flowchart TD
+    Start["Start L1 Recovery"] --> Config["Configure L1 RPC"]
+    Config --> SetBlock["Set l1-sync-start-block"]
+    SetBlock --> Launch["Launch cdk-erigon"]
+
+    Launch --> FetchL1["Fetch L1 batch data"]
+    FetchL1 --> Decode["Decode batch transactions"]
+    Decode --> Execute["Execute transactions"]
+    Execute --> UpdateState["Update local state"]
+
+    UpdateState --> MoreBatches{More batches?}
+    MoreBatches -->|Yes| FetchL1
+    MoreBatches -->|No| Verify["Verify state root"]
+
+    Verify --> Match{Matches L1?}
+    Match -->|Yes| Complete["Recovery complete"]
+    Match -->|No| Error["Error: State mismatch"]
+```
+
 ```bash
 cdk-erigon \
   --config config.yaml \

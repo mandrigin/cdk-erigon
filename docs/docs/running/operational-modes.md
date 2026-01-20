@@ -41,6 +41,34 @@ Enable with `CDK_ERIGON_SEQUENCER=1`.
 | Complexity | Simple | Complex |
 | Executor | Optional | Required |
 
+```mermaid
+flowchart LR
+    subgraph Sequencer["Sequencer Mode"]
+        direction TB
+        TxPool["Transaction Pool"]
+        Exec1["Executor"]
+        Block["Block Production"]
+        DS["Data Stream Server"]
+        TxPool --> Block
+        Block --> Exec1
+        Block --> DS
+    end
+
+    subgraph RPC["RPC Node Mode"]
+        direction TB
+        DSClient["Data Stream Client"]
+        Sync["Block Sync"]
+        API["JSON-RPC API"]
+        DSClient --> Sync
+        Sync --> API
+    end
+
+    DS -->|"stream"| DSClient
+
+    Users["Users/DApps"] -->|"submit tx"| TxPool
+    Users -->|"queries"| API
+```
+
 ## Next Steps
 
 - [Migration](./migration) - Switching modes
