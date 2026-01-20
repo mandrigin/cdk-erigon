@@ -6,6 +6,8 @@ description: Hardware and software requirements for running cdk-erigon
 
 # System Requirements
 
+See [Hardware Recommendations](../installation/hardware-recommendations) for detailed sizing guidance based on your use case.
+
 ## Hardware Requirements
 
 ### Minimum (RPC Node)
@@ -27,6 +29,8 @@ description: Hardware and software requirements for running cdk-erigon
 | Network | 100 Mbps |
 
 ### Sequencer Node
+
+For sequencer setup, see [Sequencer Configuration](../running/sequencer) and [Prover Integration](../integration/prover).
 
 | Component | Requirement |
 |-----------|-------------|
