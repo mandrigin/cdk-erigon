@@ -14,6 +14,48 @@ cdk-erigon is a fork of [Erigon](https://github.com/erigontech/erigon), optimize
 - **zkEVM Native**: Full support for Polygon zkEVM operations
 - **CDK Compatible**: Run your own CDK-powered chain
 - **Dual Modes**: Operate as RPC node or Sequencer
+- **Flexible Proving**: Choose between FEP (Full Execution Proof) and PP (Pessimistic Proof) modes
+- **Multiple Execution Types**: Support for Type1 (Ethereum-equivalent) and Type2 (zkEVM) execution
+
+## Flexible Architecture
+
+cdk-erigon supports multiple configuration dimensions, allowing you to choose the right balance of security, performance, and compatibility for your use case:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│              cdk-erigon Configuration Flexibility                   │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   EXECUTION TYPE           VERIFICATION MODE      PROVER SYSTEM    │
+│   ──────────────           ─────────────────      ─────────────    │
+│   Type2 (zkEVM)      ───▶  FEP (Full Proof)  ───▶ Hermez Prover   │
+│   • SMT state trie         • Executor required    • zkEVM circuits │
+│   • zkEVM interpreter      • Full ZK proofs       • Virtual counters│
+│                            • Max security                           │
+│                                    │                                │
+│                                    ├───▶ PP (Pessimistic)           │
+│                                    │     • No executor needed       │
+│                                    │     • Faster finality          │
+│                                                                     │
+│   Type1 (Normalcy)   ───▶  FEP (Full Proof)  ───▶ SP1 Prover      │
+│   • PMT state trie         • Full ZK proofs       • Ethereum-equiv  │
+│   • Standard EVM           • Highest security                       │
+│                                    │                                │
+│                                    ├───▶ PP (Pessimistic)           │
+│                                         • Fastest finality          │
+│                                         • Optimistic verification   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+| Configuration | Execution | Verification | Prover | Best For |
+|---------------|-----------|--------------|--------|----------|
+| Type2 + FEP | zkEVM | Full ZK | Hermez | Production zkEVM chains |
+| Type2 + PP | zkEVM | Pessimistic | None | Fast zkEVM finality |
+| Type1 + FEP | Standard EVM | Full ZK | SP1 | Ethereum-equivalent chains |
+| Type1 + PP | Standard EVM | Pessimistic | None | Maximum throughput |
+
+See [zkEVM Execution Modes](../advanced/type1-type2-migration.md) for detailed configuration.
 
 ## Supported Networks
 
@@ -28,9 +70,10 @@ cdk-erigon is a fork of [Erigon](https://github.com/erigontech/erigon), optimize
 cdk-erigon introduces several key modifications to support zkEVM (see [zkEVM architecture](https://docs.polygon.technology/zkEVM/architecture/high-level/smart-contracts/overview/) for L1 contract details):
 
 - **zkevm_* RPC namespace**: 25+ methods for zkEVM operations — see [API Reference](../api/zkevm/batch-methods)
-- **Sparse Merkle Tree (SMT)**: Alternative state storage with [Poseidon hashing](https://docs.polygon.technology/zkEVM/concepts/sparse-merkle-trees/sparse-merkle-tree/) — see [State Trie Configuration](../configuration/state-trie)
+- **Dual State Tries**: SMT (Sparse Merkle Tree) for Type2, PMT (Patricia Merkle Trie) for Type1 — see [State Trie Configuration](../configuration/state-trie)
 - **Data Stream Protocol**: Efficient sequencer synchronization — see [Data Stream Configuration](../configuration/data-stream)
 - **L1 Recovery Mode**: Chain reconstruction from Ethereum mainnet — see [L1 Recovery](../operations/l1-recovery)
+- **Flexible Verification**: FEP with executor/prover or PP without — see [Execution Modes](../advanced/type1-type2-migration.md)
 
 ## Next Steps
 

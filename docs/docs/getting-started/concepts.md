@@ -85,26 +85,104 @@ Sequencer creates batch
   Proof verified on L1 (Verified)
 ```
 
-## State Types
+## Execution Types: Type1 vs Type2
 
-cdk-erigon supports two state trie implementations:
+cdk-erigon supports two execution types, giving you flexibility in how your chain operates:
 
-### Sparse Merkle Tree (SMT)
+### Type2: zkEVM Execution
+
+Type2 is the traditional zkEVM mode using Hermez prover:
+
+- **Sparse Merkle Tree (SMT)** for state storage
+- **zkEVM interpreter** with modified opcodes
+- **Virtual counters** for ZK circuit resource tracking
+- **Hermez prover** for proof generation
+- Best for: Chains requiring zkEVM-specific features
+
+### Type1: Normalcy Execution
+
+Type1 enables full Ethereum equivalence using SP1 prover:
+
+- **Patricia Merkle Trie (PMT)** for state storage
+- **Standard EVM interpreter** with unmodified opcodes
+- **No virtual counters** (disabled)
+- **SP1 prover** for Ethereum-compatible proving
+- Best for: Chains targeting full Ethereum compatibility
+
+See [Type1/Type2 Migration](../advanced/type1-type2-migration.md) for detailed configuration.
+
+## Verification Modes: FEP vs PP
+
+cdk-erigon supports two verification mechanisms:
+
+### FEP: Full Execution Proof
+
+Full ZK proving with executor verification:
+
+- **Executor required** to verify batch execution
+- **Complete ZK proofs** generated for each batch
+- **Highest security** with cryptographic guarantees
+- **Virtual counters enforced** (Type2) or disabled (Type1)
+- Best for: Production chains requiring maximum security
+
+```yaml
+# FEP mode configuration
+zkevm.executor-urls: "executor:50071"
+zkevm.executor-strict: true
+zkevm.executor-enabled: true
+```
+
+### PP: Pessimistic Proof
+
+Optimistic verification without full ZK proofs:
+
+- **No executor required** for verification
+- **Faster finality** without proof generation overhead
+- **Challenge-based security** with fraud proofs
+- **Virtual counters disabled** in all cases
+- Best for: Chains prioritizing throughput over proof latency
+
+```yaml
+# PP mode configuration
+zkevm.executor-strict: false
+zkevm.executor-enabled: false
+zkevm.disable-virtual-counters: true
+zkevm.pessimistic-fork-number: 12
+```
+
+### Choosing Your Configuration
+
+| Use Case | Recommended Mode |
+|----------|------------------|
+| Production zkEVM | Type2 + FEP |
+| Fast zkEVM finality | Type2 + PP |
+| Ethereum equivalence | Type1 + FEP |
+| Maximum throughput | Type1 + PP |
+| Development/Testing | Type1 + PP |
+
+See [zkEVM Execution Modes](../advanced/type1-type2-migration.md) for complete configuration options.
+
+## State Tries
+
+cdk-erigon supports two state trie implementations, corresponding to execution types:
+
+### Sparse Merkle Tree (SMT) — Type2
 
 The SMT is zkEVM's native state representation. See [Polygon's SMT documentation](https://docs.polygon.technology/zkEVM/concepts/sparse-merkle-trees/sparse-merkle-tree/) for technical details.
 
 - Uses [Poseidon hashing](https://docs.polygon.technology/zkEVM/concepts/sparse-merkle-trees/detailed-smt/) (ZK-friendly)
-- Required for proof generation
-- Default for zkEVM networks
-- Configure with [`--zkevm.smt`](../configuration/state-trie#sparse-merkle-tree)
+- Required for Type2 zkEVM execution
+- Supports SMT v2 with improved performance — see [SMT v2 Migration](../advanced/smt-v2-migration.md)
+- Configure with [`--zkevm.only-smt-v2`](../configuration/state-trie#sparse-merkle-tree)
 
-### Patricia Merkle Trie (PMT)
+### Patricia Merkle Trie (PMT) — Type1
 
 The PMT is Erigon's standard state representation. See [Erigon's state documentation](https://erigon.gitbook.io/erigon) for details.
 
-- Standard Ethereum trie
-- Compatible with existing tooling
-- Used for non-ZK operations
+- Standard Ethereum Keccak-based trie
+- Required for Type1 Normalcy execution
+- Full compatibility with Ethereum tooling
+- Configure via chain config `normalcyBlock`
 
 ## Finality States
 
