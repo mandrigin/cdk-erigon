@@ -1,0 +1,50 @@
+/**
+ * cdk-erigon Documentation Custom Styles
+ * Based on Polygon brand colors
+ */
+
+:root {
+  --ifm-color-primary: #7b3fe4;
+  --ifm-color-primary-dark: #6a2dd6;
+  --ifm-color-primary-darker: #5f28c8;
+  --ifm-color-primary-darkest: #4d20a4;
+  --ifm-color-primary-light: #8c56e8;
+  --ifm-color-primary-lighter: #9d6dec;
+  --ifm-color-primary-lightest: #b894f2;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(123, 63, 228, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #9d6dec;
+  --ifm-color-primary-dark: #8c56e8;
+  --ifm-color-primary-darker: #7b3fe4;
+  --ifm-color-primary-darkest: #6a2dd6;
+  --ifm-color-primary-light: #ae84f0;
+  --ifm-color-primary-lighter: #bf9bf4;
+  --ifm-color-primary-lightest: #d0b2f8;
+  --docusaurus-highlighted-code-line-bg: rgba(157, 109, 236, 0.2);
+}
+
+/* Configuration format tabs styling */
+.tabs-container .tabs {
+  margin-bottom: 0;
+}
+
+/* API method signatures */
+.api-method-signature {
+  background-color: var(--ifm-code-background);
+  padding: 1rem;
+  border-radius: 4px;
+  font-family: var(--ifm-font-family-monospace);
+  margin-bottom: 1rem;
+}
+
+/* Admonition customizations for zkEVM-specific notes */
+.admonition-zkevm {
+  border-left-color: var(--ifm-color-primary);
+}
+
+.admonition-zkevm .admonition-heading h5 {
+  color: var(--ifm-color-primary);
+}
