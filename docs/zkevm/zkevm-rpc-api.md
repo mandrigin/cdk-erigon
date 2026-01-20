@@ -43,6 +43,8 @@ The `zkevm` namespace provides zkEVM-specific RPC methods for interacting with b
   - [zkevm_getLatestDataStreamBlock](#zkevm_getlatestdatastreamblock)
 - [Deprecated Methods](#deprecated-methods)
   - [zkevm_getBroadcastURI](#zkevm_getbroadcasturi-deprecated)
+  - [zkevm_virtualCounters](#zkevm_virtualcounters-deprecated)
+  - [zkevm_traceTransactionCounters](#zkevm_tracetransactioncounters-deprecated)
 
 ---
 
@@ -1192,11 +1194,45 @@ curl -X POST -H "Content-Type: application/json" \
 
 ## Deprecated Methods
 
+The following methods are deprecated and should not be used in new implementations.
+
 ### zkevm_getBroadcastURI (Deprecated)
 
-**Status:** Commented out in the codebase and not currently exposed.
+**Status:** Removed from the codebase.
 
 This method was intended to return the URI of the trusted sequencer broadcaster.
+
+**Replacement:** None (functionality removed)
+
+---
+
+### zkevm_virtualCounters (Deprecated)
+
+**Status:** Deprecated in favor of `zkevm_estimateCounters`.
+
+This was a legacy counter estimation method.
+
+**Replacement:** Use `zkevm_estimateCounters` instead.
+
+---
+
+### zkevm_traceTransactionCounters (Deprecated)
+
+**Status:** Deprecated in favor of `zkevm_getBatchCountersByNumber`.
+
+This was a legacy transaction counter tracing method.
+
+**Replacement:** Use `zkevm_getBatchCountersByNumber` instead.
+
+---
+
+### Migration Guide
+
+| Deprecated Method | Replacement |
+|-------------------|-------------|
+| `zkevm_virtualCounters` | `zkevm_estimateCounters` |
+| `zkevm_traceTransactionCounters` | `zkevm_getBatchCountersByNumber` |
+| `zkevm_getBroadcastURI` | None (removed functionality) |
 
 ---
 
