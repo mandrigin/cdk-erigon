@@ -20,6 +20,8 @@ Polygon's aggregation layer for unified liquidity across chains.
 
 A collection of L2 blocks submitted together for ZK proof generation.
 
+See: [Concepts](getting-started/concepts.md)
+
 ## F
 
 ### Fork ID
