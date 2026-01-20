@@ -258,3 +258,4 @@ curl -X POST http://localhost:8545 \
 - [Configuration Reference](../README.md#config) - Full list of configuration options
 - [zkEVM API Methods](../README.md#zkevm-specific-api-support) - zkEVM-specific RPC endpoints
 - [Dynamic Chain Configuration](../README.md#dynamic-chain-configuration) - Running custom CDK chains
+- [Troubleshooting and FAQ](troubleshooting.md) - Common issues and solutions
