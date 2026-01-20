@@ -83,6 +83,7 @@ const sidebars = {
       },
       items: [
         'api/overview',
+        'api/versioning',
         {
           type: 'category',
           label: 'zkevm Namespace',

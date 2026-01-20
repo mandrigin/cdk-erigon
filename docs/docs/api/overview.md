@@ -54,5 +54,6 @@ curl -X POST http://localhost:8545 \
 
 ## Next Steps
 
+- [API Versioning](./versioning) - Version history and compatibility
 - [zkevm Namespace](./zkevm/batch-methods) - zkEVM-specific methods
 - [Standard Namespaces](./standard-namespaces) - Ethereum standard APIs
